@@ -1,0 +1,12 @@
+{
+  "agent": "CreativeAgent",
+  "timestamp": "2025-12-01T17:42:08.495833",
+  "input_summary": "{'insight': {'hypothesis': 'ROAS dropped last week primarily due to a significant decline in Click-Through Rate (CTR), indicating that the ad creative has become stale or less engaging to the target audience.', 'reasoning': 'Spend remained constant at $1000.0, and Impressions also remained flat at 50,000. However, Clicks plummeted by 48.91%, from a baseline of 920 to 470. This directly resulted in a 48.91% drop in CTR, from 1.84% (920/50000) to 0.94% (470/50000). Since the conversion rate per cl",
+  "output": {
+    "suggestions": [
+      "Are You Making This Costly Mistake?",
+      "The Secret They Don't Want You To Know",
+      "You Won't Believe What Happens Next!"
+    ]
+  }
+}

@@ -1,16 +1,21 @@
 app:
   name: "Kasparro Agentic Analyst"
-  version: "1.0.0"
+  version: "2.0.0"
 
 llm:
   model_name: "gemini-2.5-flash"  
   temperature: 0.0
   seed: 42
 
+retry_policy:
+  max_attempts: 3
+  multiplier: 1.5
+  min_wait: 2
+
 thresholds:
   fatigue_frequency: 2.0
   min_confidence: 0.8
-  max_retries: 3
+  data_drift_tolerance: 0.2
 
 data:
   input_path: "data/synthetic_fb_data.csv"

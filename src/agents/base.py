@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class BaseAgent:
-    def __init__(self, name, model="gemini-2.5-flash"): # <--- CHANGED TO NEW MODEL
+    # UPDATED DEFAULT MODEL BELOW:
+    def __init__(self, name, model="gemini-2.5-flash"): 
         self.name = name
         
-        # Using the newer Gemini 2.5 Flash model which is free and faster
         self.llm = ChatGoogleGenerativeAI(
             model=model,
             temperature=0.0,

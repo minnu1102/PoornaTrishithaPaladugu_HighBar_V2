@@ -1,21 +1,9 @@
 {
-  "run_id": "06398aeb",
-  "status": "Success",
-  "final_insight": {
+  "agent": "InsightAgent",
+  "timestamp": "2025-12-01T17:41:55.214450",
+  "input_summary": "{'data_summary': '{\"analysis_period\": \"Last 7 Days vs Previous 30 Days\", \"metrics\": {\"spend\": {\"current_avg\": 1000.0, \"baseline_avg\": 1000.0, \"delta_percent\": 0.0}, \"revenue\": {\"current_avg\": 70500.0, \"baseline_avg\": 138000.0, \"delta_percent\": -48.91}, \"clicks\": {\"current_avg\": 470.0, \"baseline_avg\": 920.0, \"delta_percent\": -48.91}, \"impressions\": {\"current_avg\": 50000.0, \"baseline_avg\": 50000.0, \"delta_percent\": 0.0}, \"roas\": {\"current\": 70.5, \"baseline\": 138.0, \"delta_percent\": -48.91}}, \"drif",
+  "output": {
     "hypothesis": "ROAS dropped last week primarily due to a significant decline in Click-Through Rate (CTR), indicating that the ad creative has become stale or less engaging to the target audience.",
     "reasoning": "Spend remained constant at $1000.0, and Impressions also remained flat at 50,000. However, Clicks plummeted by 48.91%, from a baseline of 920 to 470. This directly resulted in a 48.91% drop in CTR, from 1.84% (920/50000) to 0.94% (470/50000). Since the conversion rate per click (Revenue/Clicks) remained stable (150 in both periods), the drastic reduction in clicks directly led to a 48.91% decrease in Revenue (from $138,000 to $70,500). Consequently, ROAS dropped by 48.91%, from 138.0 to 70.5. The stable impressions combined with a sharp drop in CTR strongly suggest that the ad creative is no longer effectively capturing audience attention, leading to reduced engagement."
-  },
-  "validation": {
-    "is_valid": true,
-    "confidence": 1.0,
-    "critique": "Passed"
-  },
-  "creatives": {
-    "suggestions": [
-      "Are You Making This Costly Mistake?",
-      "The Secret They Don't Want You To Know",
-      "You Won't Believe What Happens Next!"
-    ]
-  },
-  "error_log": null
+  }
 }

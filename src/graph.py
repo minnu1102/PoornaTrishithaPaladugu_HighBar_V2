@@ -5,122 +5,129 @@ from src.agents.data_agent import DataAgent
 from src.agents.insight_agent import InsightAgent
 from src.agents.evaluator import EvaluatorAgent
 from src.agents.creative_agent import CreativeAgent
-from src.utils.logger import setup_logger
+from src.observability import RunLogger
 
-# 1. Setup Logger
-logger = setup_logger("Graph")
+# Initialize Logger
+run_logger = RunLogger()
 
-# 2. Initialize the Agents
-# These are the Python classes you created in src/agents/
+# Init Agents
 data_agent = DataAgent()
 insight_agent = InsightAgent("Insight")
 evaluator_agent = EvaluatorAgent("Evaluator")
 creative_agent = CreativeAgent("Creative")
 
-# --- 3. Define Graph Nodes (The Steps) ---
+# --- Nodes ---
 
 def data_node(state: AgentState):
-    logger.info("Data Agent is analyzing the dataset...")
-    # Execute the pandas logic
-    summary = data_agent.execute(state["query"])
-    # Return update to state
-    return {"data_summary": summary, "retry_count": 0}
+    print("🔍 Data Agent analyzing deltas...")
+    result = data_agent.execute(state["query"])
+    
+    run_logger.log_step("DataAgent", {"query": state["query"]}, result)
+    
+    # Check for failure
+    if "error" in result:
+        print(f"⚠️ Data Error Detected: {result['error']}")
+        return {
+            "data_summary": json.dumps(result), # Pass the error so state has the key
+            "final_report": f"CRITICAL FAILURE: {result['error']}"
+        }
+        
+    return {"data_summary": json.dumps(result)}
 
 def insight_node(state: AgentState):
-    attempt = state.get("retry_count", 0) + 1
-    logger.info(f"Insight Agent is thinking (Attempt {attempt})...")
+    print(" Insight Agent diagnosing drivers...")
+    # Safe access to data
+    data_str = state.get("data_summary", "{}")
     
-    # Generate hypothesis, passing previous critique if it exists
-    hypo = insight_agent.generate(
-        state["query"], 
-        state["data_summary"], 
-        state.get("critique")
-    )
+    hypo = insight_agent.generate(state["query"], data_str, state.get("critique"))
+    
+    run_logger.log_step("InsightAgent", {"data_summary": data_str}, hypo)
     return {"hypothesis": hypo}
 
 def evaluator_node(state: AgentState):
-    logger.info("Evaluator is validating the hypothesis...")
+    print("Evaluator validating evidence...")
     val = evaluator_agent.validate(state["hypothesis"], state["data_summary"])
+    
+    run_logger.log_step("EvaluatorAgent", {"hypothesis": state["hypothesis"]}, val)
     return {"validation": val}
 
 def creative_node(state: AgentState):
-    logger.info("Creative Agent is drafting new ads...")
-    creatives = creative_agent.generate(state["hypothesis"], ["Old Failing Ad Context"])
+    print(" Creative Agent generating targeted copy...")
+    creatives = creative_agent.generate(state["hypothesis"], ["Ad_Variant_A"])
+    
+    run_logger.log_step("CreativeAgent", {"insight": state["hypothesis"]}, creatives)
     return {"creatives": creatives}
 
 def reporting_node(state: AgentState):
-    logger.info("Saving Final Report...")
-    # Save the full state to a JSON file
+    print(f" Saving Final Report to {run_logger.log_dir}...")
+    
+    final_output = {
+        "run_id": run_logger.run_id,
+        "status": "Success" if not state.get("final_report", "").startswith("CRITICAL") else "Failed",
+        "final_insight": state.get("hypothesis"),
+        "validation": state.get("validation"),
+        "creatives": state.get("creatives"),
+        "error_log": state.get("final_report")
+    }
+    
+    with open(f"{run_logger.log_dir}/final_report.json", "w") as f:
+        json.dump(final_output, f, indent=2, default=str)
+        
     with open("reports/final_report.json", "w") as f:
-        json.dump(state, f, indent=2, default=str)
+        json.dump(final_output, f, indent=2, default=str)
+        
     return {"final_report": "Saved"}
 
-# --- 4. Define Logic Edges (The Rules) ---
+# --- Logic Edges ---
+
+def check_data_health(state: AgentState):
+    """Circuit Breaker: Stop if data is bad."""
+    if state.get("final_report", "").startswith("CRITICAL"):
+        return "report" # Go straight to end
+    return "insight"    # Continue normally
 
 def check_validation(state: AgentState):
-    """
-    The Router: Decides where to go after Evaluation.
-    """
-    validation = state.get("validation", {})
-    is_valid = validation.get("is_valid", False)
+    val = state.get("validation", {})
+    if val.get("is_valid"):
+        return "creative"
     
-    # Path A: Success
-    if is_valid:
-        # Check if we need creatives (keyword search in hypothesis)
-        hypo_text = str(state["hypothesis"]).lower()
-        if "fatigue" in hypo_text or "creative" in hypo_text:
-            return "creative"
-        return "report"
-    
-    # Path B: Failure (Retry Logic)
-    current_retries = state.get("retry_count", 0)
-    if current_retries < 3:
-        critique = validation.get("critique", "Invalid Logic")
-        logger.warning(f" Hypothesis Rejected: {critique}")
-        
-        # Increment retry count and loop back
+    if state.get("retry_count", 0) < 3:
+        print(f" Rejected: {val.get('critique')} (Retrying...)")
         return "retry"
     
-    # Path C: Max Retries Reached (Give up)
-    logger.error("Max retries reached. Exiting.")
     return "report"
 
-def route_critique(state: AgentState):
-    """Helper to update state before looping back"""
-    return {
-        "critique": state["validation"].get("critique"),
-        "retry_count": state["retry_count"] + 1
-    }
-
-# --- 5. Build the Graph ---
+# --- Graph Build ---
 
 workflow = StateGraph(AgentState)
 
-# Add the Nodes
+# Add Nodes
 workflow.add_node("data", data_node)
 workflow.add_node("insight", insight_node)
 workflow.add_node("evaluator", evaluator_node)
 workflow.add_node("creative", creative_node)
 workflow.add_node("report", reporting_node)
 
-# Add the Edges (Linear flow)
+# Add Edges
 workflow.set_entry_point("data")
-workflow.add_edge("data", "insight")
-workflow.add_edge("insight", "evaluator")
 
-# Add the Conditional Edge (The Loop)
+# NEW: Add conditional edge after Data to handle errors
 workflow.add_conditional_edges(
-    "evaluator",
-    check_validation,
+    "data",
+    check_data_health,
     {
-        "creative": "creative", # If valid + creative issue
-        "report": "report",     # If valid + no creative issue OR failed too many times
-        "retry": "insight"      # If invalid -> Try Again (Loop)
+        "report": "report", # Failure path
+        "insight": "insight" # Success path
     }
 )
+
+workflow.add_edge("insight", "evaluator")
+
+workflow.add_conditional_edges("evaluator", check_validation, {
+    "creative": "creative", "retry": "insight", "report": "report"
+})
 
 workflow.add_edge("creative", "report")
 workflow.add_edge("report", END)
 
-# Compile the graph
 app = workflow.compile()
