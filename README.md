@@ -30,13 +30,17 @@ graph TD
     style Evaluator fill:#f8bbd0,stroke:#880e4f
     style Creative fill:#c8e6c9,stroke:#2e7d32
     style Report fill:#e0e0e0,stroke:#333
-🚀 Quick Start
+
+
+
+Quick Start:-
 Follow these steps to setup the environment.
 
 1. Installation
-Bash
+
 
 git clone [https://github.com/minnu1102/kasparro-agentic-fb-analyst-poorna-trishitha-paladugu.git](https://github.com/minnu1102/kasparro-agentic-fb-analyst-poorna-trishitha-paladugu.git)
+
 cd kasparro-agentic-fb-analyst-poorna-trishitha-paladugu
 
 # Install dependencies
@@ -44,28 +48,25 @@ pip install -r requirements.txt
 2. Configuration
 Create a .env file in the root directory and add your API Key:
 
-Bash
-
 OPENAI_API_KEY=sk-proj-...
 # OR if using Gemini
 # GOOGLE_API_KEY=AIzaSy...
-📊 Data Instructions
+
+ Data Instructions:-
 This project includes a synthetic data generator that engineers a specific "Ad Fatigue" scenario (Frequency increases while CTR decreases over 30 days).
 
 Run this command to generate the dataset:
 
-Bash
-
 python -m data.generate_data
+
 This will create data/synthetic_fb_data.csv.
 
-💻 Exact CLI Command
+Exact CLI Command:-
 To run the full agentic workflow:
 
-Bash
-
 python run.py
-⚖️ Validation Description
+
+Validation Description:-
 The core innovation of this system is the Evaluator Agent, which acts as a "Unit Test" for the Analyst's insights. It prevents hallucination by enforcing strict statistical rules defined in prompts/evaluator.md:
 
 Fatigue Check: If "Fatigue" is diagnosed, the data must show Average Frequency > 2.0 AND a negative correlation between Frequency and CTR.
@@ -74,32 +75,33 @@ Spend Check: If "Scaling" is diagnosed, the Spend trend must be positive.
 
 Feedback Loop: If these conditions are not met, the Evaluator rejects the hypothesis, and the graph routes execution back to the Insight Agent with a critique.
 
-📄 Example Outputs
+Example Outputs:-
 After a successful run, the system produces reports/final_report.json.
 
-Example Hypothesis & Validation:
+Actual V2 Run Output:
 
 JSON
 
 {
-  "hypothesis": {
-    "hypothesis": "ROAS dropped due to Audience Fatigue.",
-    "reasoning": "Frequency increased from 1.2 to 3.8 while CTR dropped by 45%."
+  "final_insight": {
+    "hypothesis": "ROAS dropped due to significant CTR decline (Ad Fatigue).",
+    "reasoning": "While Spend remained constant ($1000), Clicks plummeted by 48.91% (920 vs 470). This caused ROAS to drop from 138.0 to 70.5. The stable impressions rule out audience size issues, confirming creative fatigue."
   },
   "validation": {
     "is_valid": true,
-    "confidence": 0.95,
+    "confidence": 1.0,
     "critique": "Passed. Data supports the negative correlation."
   },
   "creatives": {
     "suggestions": [
-        "Stop Wasting Money on Ads That Don't Convert",
-        "The #1 Secret to Lower CPA",
-        "Why Your Old Ads Are Failing"
+      "Are You Making This Costly Mistake?",
+      "The Secret They Don't Want You To Know",
+      "You Won't Believe What Happens Next!"
     ]
   }
 }
-🧠 Engineering Decisions
+
+Engineering Decisions:-
 LangGraph over Linear Chains: Used for state management and cyclic retries.
 
 Pandas for Math: Decoupled calculation from the LLM to ensure arithmetic accuracy.
