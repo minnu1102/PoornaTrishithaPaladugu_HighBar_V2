@@ -48,12 +48,12 @@ def main():
         
         if final_state.get("hypothesis"):
             hypo = final_state["hypothesis"].get("hypothesis", "No hypothesis found")
-            console.print(f"\n[bold yellow] Final Diagnosis:[/bold yellow] {hypo}")
+            console.print(f"\n[bold yellow]🔍 Final Diagnosis:[/bold yellow] {hypo}")
         
         console.print(f" Full Report saved to: [underline]reports/final_report.json[/underline]")
 
     except SchemaValidationError as e:
-        console.print(f"\n[bold red]  DATA BLOCKED:[/bold red] Input data failed schema validation.")
+        console.print(f"\n[bold red] DATA BLOCKED:[/bold red] Input data failed schema validation.")
         console.print(f"Details: {str(e)}")
         sys.exit(1)
         
@@ -62,7 +62,7 @@ def main():
         sys.exit(1)
 
     except Exception as e:
-        console.print(f"\n[bold red]UNEXPECTED CRASH:[/bold red] {str(e)}")
+        console.print(f"\n[bold red] UNEXPECTED CRASH:[/bold red] {str(e)}")
 
 if __name__ == "__main__":
     main()
